@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">BoxTester</string>
+  <string name="app_name">寄存柜检测</string>
+  <string name="lock_title">锁检测</string>
+  <string name="card_title">ID/IC卡检测</string>
 </resources>
