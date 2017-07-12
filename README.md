@@ -1,15 +1,11 @@
-Anko Example Project
+Box Tester
 ===========
 
-Code in this repo shows how to set up [Anko](https://github.com/JetBrains/anko) library in the Android Gradle project. The application is very simple yet working and shows some important Anko concepts. Please take into account that to work with this code in Android Studio you will need to install Kotlin plugin from [JetBrains Plugins](https://plugins.jetbrains.com/plugin/6954?pr=androidstudio).
+该 app 基于 kotlin 和 anko 开发，在 Android 4.2.2(android-17) 上运行，用于对寄存柜的硬件系统进行检测。支持的检测条目有：
 
-The repo can be also used as a template, so it may be a nice starting point for your new app. Come get some! :thumbsup:
+1. 锁的状态检测以及开锁测试
 
-## Importing
+2. 寄存柜柜子内部状态测试
 
-Project can be easily imported into IntelliJ IDEA 15 or Android Studio.
-Select **File** | **Import project…** and open the ``build.gradle`` file.
+3. ID/IC 卡刷卡测试
 
-## So what is Anko?
-
-You can read more about Anko library [here](https://github.com/JetBrains/anko).
