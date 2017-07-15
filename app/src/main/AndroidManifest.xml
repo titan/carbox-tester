@@ -1,6 +1,6 @@
 <manifest
   xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.fengchaohuzhu.box"
+  package="com.fengchaohuzhu.box.tester"
   >
 
   <application
