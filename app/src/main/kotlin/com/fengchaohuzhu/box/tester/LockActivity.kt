@@ -27,7 +27,7 @@ import org.jetbrains.anko.*
 
 import LockerSDK
 
-enum class ViewID (val value: Int) {
+enum class LockViewID (val value: Int) {
   DEVICES(0x00010001),
   BOXES(0x00010002),
   ERROR_CONTAINER(0x00010003),
@@ -49,7 +49,7 @@ class LockActivity : Activity(), AnkoLogger {
         SerialPort.getCommPort(it)
       }.reversed()
       uiThread {
-        val spinner = find<Spinner>(ViewID.DEVICES.value)
+        val spinner = find<Spinner>(LockViewID.DEVICES.value)
         val adapter: PortAdapter = spinner.adapter as PortAdapter
         adapter.addAll(ports)
         spinner.setSelection(1)
@@ -67,10 +67,10 @@ class LockActivity : Activity(), AnkoLogger {
       port.setParity(0)
       if (!port.openPort()) {
         uiThread {
-          find<Spinner>(ViewID.DEVICES.value).setEnabled(true)
-          find<TextView>(ViewID.ERROR.value).text = "无法打开串口设备 ${port.systemPortName}"
-          find<View>(ViewID.ERROR_CONTAINER.value).visibility = View.VISIBLE
-          find<GridView>(ViewID.BOXES.value).visibility = View.INVISIBLE
+          find<Spinner>(LockViewID.DEVICES.value).setEnabled(true)
+          find<TextView>(LockViewID.ERROR.value).text = "无法打开串口设备 ${port.systemPortName}"
+          find<View>(LockViewID.ERROR_CONTAINER.value).visibility = View.VISIBLE
+          find<GridView>(LockViewID.BOXES.value).visibility = View.INVISIBLE
         }
       } else {
         var dialog: ProgressDialog? = null
@@ -99,10 +99,10 @@ class LockActivity : Activity(), AnkoLogger {
           port.closePort()
           uiThread {
             dialog?.cancel()
-            find<Spinner>(ViewID.DEVICES.value).setEnabled(true)
-            find<TextView>(ViewID.ERROR.value).text = "在 ${port.systemPortName} 上未发现可用的锁控板"
-            find<View>(ViewID.ERROR_CONTAINER.value).visibility = View.VISIBLE
-            find<GridView>(ViewID.BOXES.value).visibility = View.INVISIBLE
+            find<Spinner>(LockViewID.DEVICES.value).setEnabled(true)
+            find<TextView>(LockViewID.ERROR.value).text = "在 ${port.systemPortName} 上未发现可用的锁控板"
+            find<View>(LockViewID.ERROR_CONTAINER.value).visibility = View.VISIBLE
+            find<GridView>(LockViewID.BOXES.value).visibility = View.INVISIBLE
           }
         } else {
           worker = Worker(sdk!!)
@@ -120,14 +120,15 @@ class LockActivity : Activity(), AnkoLogger {
   fun open(lock: Byte) {
     worker?.queue?.add(LockCommand(type = LockCommandType.OPEN, board = board, lock = lock) { _: Any? ->
       worker?.queue?.add(LockCommand(type = LockCommandType.QUERY, board = board) { dat: Any? ->
-        refreshLockGridUI(dat as IntArray)
+        val boxes: IntArray? = dat as IntArray
+        refreshLockGridUI(boxes ?: IntArray(0))
       })
     })
   }
 
   fun refreshLockGridUI(boxes: IntArray) {
     doAsync () {
-      val adapter = find<GridView>(ViewID.BOXES.value).adapter as BoxAdapter
+      val adapter = find<GridView>(LockViewID.BOXES.value).adapter as BoxAdapter
       for (i in 1..boxes.size) {
         if (i > adapter.getCount()) {
           break;
@@ -137,9 +138,9 @@ class LockActivity : Activity(), AnkoLogger {
       }
       uiThread {
         adapter.notifyDataSetChanged()
-        find<Spinner>(ViewID.DEVICES.value).setEnabled(true)
-        find<View>(ViewID.ERROR_CONTAINER.value).visibility = View.INVISIBLE
-        find<GridView>(ViewID.BOXES.value).visibility = View.VISIBLE
+        find<Spinner>(LockViewID.DEVICES.value).setEnabled(true)
+        find<View>(LockViewID.ERROR_CONTAINER.value).visibility = View.INVISIBLE
+        find<GridView>(LockViewID.BOXES.value).visibility = View.VISIBLE
       }
     }
   }
@@ -149,7 +150,7 @@ class LockActivityUi : AnkoComponent<LockActivity> {
   override fun createView(ui: AnkoContext<LockActivity>) = with(ui) {
     verticalLayout {
       val spinner = spinner {
-        id = ViewID.DEVICES.value
+        id = LockViewID.DEVICES.value
         adapter = PortAdapter(mutableListOf<SerialPort>())
       }
       spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -164,16 +165,16 @@ class LockActivityUi : AnkoComponent<LockActivity> {
       frameLayout {
         lparams(weight = 1.0f, height = 0)
         relativeLayout {
-          id = ViewID.ERROR_CONTAINER.value
+          id = LockViewID.ERROR_CONTAINER.value
           textView("") {
-            id = ViewID.ERROR.value
+            id = LockViewID.ERROR.value
             textSize = 28f
           }.lparams {
             centerInParent()
           }
         }
         val grid = gridView {
-          id = ViewID.BOXES.value
+          id = LockViewID.BOXES.value
           visibility = View.INVISIBLE
           numColumns = 3
           stretchMode = GridView.STRETCH_COLUMN_WIDTH
