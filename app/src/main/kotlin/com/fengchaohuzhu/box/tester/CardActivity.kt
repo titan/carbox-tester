@@ -1,10 +1,13 @@
 package com.fengchaohuzhu.box.tester
 
+import android.app.ActionBar
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.TextView
 import org.jetbrains.anko.*
 
@@ -37,6 +40,21 @@ class CardActivity : Activity() {
       }
     }
     return true
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    val ab: ActionBar = getActionBar()
+    ab.setHomeButtonEnabled(true)
+    ab.setDisplayHomeAsUpEnabled(true)
+    ab.show()
+    return true
+  }
+
+  override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
+    when (menuItem.getItemId()) {
+      android.R.id.home -> startActivity(intentFor<MainActivity>().clearTop())
+    }
+    return (super.onOptionsItemSelected(menuItem))
   }
 }
 
