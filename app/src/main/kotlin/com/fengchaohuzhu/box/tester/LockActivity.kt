@@ -2,6 +2,9 @@ package com.fengchaohuzhu.box.tester
 
 import java.io.File
 import java.io.FilenameFilter
+import java.util.LinkedList
+import java.util.Queue
+import java.util.Timer
 
 import android.app.Activity
 import android.app.ProgressDialog
@@ -19,7 +22,9 @@ import android.widget.ListAdapter
 import android.widget.Spinner
 import android.widget.TextView
 import com.fazecast.jSerialComm.SerialPort
+import kotlin.concurrent.timer
 import org.jetbrains.anko.*
+
 import LockerSDK
 
 enum class ViewID (val value: Int) {
@@ -32,6 +37,8 @@ enum class ViewID (val value: Int) {
 class LockActivity : Activity(), AnkoLogger {
   var board: Byte = 0
   var sdk: LockerSDK? = null
+  var worker: Worker? = null
+  var locktimer: Timer? = null
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     LockActivityUi().setContentView(this)
@@ -52,6 +59,8 @@ class LockActivity : Activity(), AnkoLogger {
   }
   fun scan(port: SerialPort) {
     doAsync() {
+      worker?.running = false
+      locktimer?.cancel()
       port.setBaudRate(9600)
       port.setNumDataBits(8)
       port.setNumStopBits(1)
@@ -96,29 +105,28 @@ class LockActivity : Activity(), AnkoLogger {
             find<GridView>(ViewID.BOXES.value).visibility = View.INVISIBLE
           }
         } else {
-          val boxes: IntArray = sdk?.query(board) ?: IntArray(0)
-          val adapter = find<GridView>(ViewID.BOXES.value).adapter as BoxAdapter
-          for (i in 1..boxes.size) {
-            if (i > adapter.getCount()) {
-              break;
-            }
-            val item = adapter.getItem(i - 1)
-            item.locked = boxes[i] == 1
-          }
-          uiThread {
-            adapter.notifyDataSetChanged()
-            find<Spinner>(ViewID.DEVICES.value).setEnabled(true)
-            find<View>(ViewID.ERROR_CONTAINER.value).visibility = View.INVISIBLE
-            find<GridView>(ViewID.BOXES.value).visibility = View.VISIBLE
+          worker = Worker(sdk!!)
+          worker?.start()
+
+          locktimer = timer(period = 3000L) {
+            worker?.queue?.add(LockCommand(type = LockCommandType.QUERY, board = board) { dat: Any? ->
+              refreshLockGridUI(dat as IntArray)
+            })
           }
         }
       }
     }
   }
   fun open(lock: Byte) {
+    worker?.queue?.add(LockCommand(type = LockCommandType.OPEN, board = board, lock = lock) { _: Any? ->
+      worker?.queue?.add(LockCommand(type = LockCommandType.QUERY, board = board) { dat: Any? ->
+        refreshLockGridUI(dat as IntArray)
+      })
+    })
+  }
+
+  fun refreshLockGridUI(boxes: IntArray) {
     doAsync () {
-      sdk?.open(board, lock)
-      val boxes: IntArray = sdk?.query(board) ?: IntArray(0)
       val adapter = find<GridView>(ViewID.BOXES.value).adapter as BoxAdapter
       for (i in 1..boxes.size) {
         if (i > adapter.getCount()) {
@@ -129,6 +137,9 @@ class LockActivity : Activity(), AnkoLogger {
       }
       uiThread {
         adapter.notifyDataSetChanged()
+        find<Spinner>(ViewID.DEVICES.value).setEnabled(true)
+        find<View>(ViewID.ERROR_CONTAINER.value).visibility = View.INVISIBLE
+        find<GridView>(ViewID.BOXES.value).visibility = View.VISIBLE
       }
     }
   }
@@ -259,5 +270,33 @@ class BoxAdapter(val boxes: List<Box>) : BaseAdapter() {
 
   override fun areAllItemsEnabled(): Boolean {
     return true
+  }
+}
+
+enum class LockCommandType {
+  QUERY,
+  CHECK,
+  OPEN
+}
+
+data class LockCommand (val type: LockCommandType = LockCommandType.QUERY, val board: Byte = 1, val lock: Byte = 1, val callback: (result: Any?) -> Unit)
+
+class Worker(val sdk: LockerSDK): Thread() {
+  val queue: Queue<LockCommand> = LinkedList<LockCommand>()
+  var running: Boolean = true
+
+  override fun run() {
+    while (running) {
+      try {
+        Thread.sleep(1000)
+      } finally {
+      }
+      var cmd: LockCommand? = queue.poll()
+      when (cmd?.type) {
+        LockCommandType.QUERY -> cmd.callback(sdk.query(cmd.board))
+        LockCommandType.CHECK -> cmd.callback(sdk.check(cmd.board))
+        LockCommandType.OPEN -> cmd.callback(sdk.open(cmd.board, cmd.lock))
+      }
+    }
   }
 }
