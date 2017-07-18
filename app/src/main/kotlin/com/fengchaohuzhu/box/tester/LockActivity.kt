@@ -6,11 +6,14 @@ import java.util.LinkedList
 import java.util.Queue
 import java.util.Timer
 
+import android.app.ActionBar
 import android.app.Activity
 import android.app.ProgressDialog
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Adapter
@@ -57,6 +60,22 @@ class LockActivity : Activity(), AnkoLogger {
       }
     }
   }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    val ab: ActionBar = getActionBar()
+    ab.setHomeButtonEnabled(true)
+    ab.setDisplayHomeAsUpEnabled(true)
+    ab.show()
+    return true
+  }
+
+  override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
+    when (menuItem.getItemId()) {
+      android.R.id.home -> startActivity(intentFor<MainActivity>().clearTop())
+    }
+    return (super.onOptionsItemSelected(menuItem))
+  }
+
   fun scan(port: SerialPort) {
     doAsync() {
       worker?.running = false

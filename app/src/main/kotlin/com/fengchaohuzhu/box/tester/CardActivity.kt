@@ -20,6 +20,10 @@ class CardActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     CardActivityUi().setContentView(this)
+    find<TextView>(CardViewID.NUMBER.value).setFocusable(true)
+    find<TextView>(CardViewID.NUMBER.value).setFocusableInTouchMode(true)
+    find<TextView>(CardViewID.NUMBER.value).setClickable(true)
+    find<TextView>(CardViewID.NUMBER.value).requestFocus()
   }
   override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
     if (keyCode == KeyEvent.KEYCODE_ENTER) {
