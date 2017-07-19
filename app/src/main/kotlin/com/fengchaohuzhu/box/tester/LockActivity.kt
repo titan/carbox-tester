@@ -117,7 +117,7 @@ class LockActivity : Activity(), AnkoLogger {
             refreshLockGridUI(IntArray(0))
             locktimer = timer(initialDelay = 0L, period = 1000L) {
               worker?.queue?.add(LockCommand(type = LockCommandType.QUERY, board = board) { dat1: Any? ->
-                refreshLockGridUI(dat1 as IntArray)
+                refreshLockGridUI((dat1 ?: IntArray(0)) as IntArray)
               })
             }
           } else {
@@ -145,8 +145,7 @@ class LockActivity : Activity(), AnkoLogger {
   fun open(lock: Byte) {
     worker?.queue?.add(LockCommand(type = LockCommandType.OPEN, board = board, lock = lock) { _: Any? ->
       worker?.queue?.add(LockCommand(type = LockCommandType.QUERY, board = board) { dat: Any? ->
-        val boxes: IntArray? = dat as IntArray
-        refreshLockGridUI(boxes ?: IntArray(0))
+        refreshLockGridUI((dat ?: IntArray(0)) as IntArray)
       })
     })
   }
@@ -202,13 +201,15 @@ class LockActivityUi : AnkoComponent<LockActivity> {
           visibility = View.INVISIBLE
           numColumns = 3
           stretchMode = GridView.STRETCH_COLUMN_WIDTH
-          adapter = BoxAdapter(listOf(Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box(), Box()))
+          verticalSpacing = dip(10)
+          horizontalSpacing = dip(10)
+          adapter = BoxAdapter(listOf(Box(id = 1), Box(id = 2), Box(id = 3), Box(id = 4), Box(id = 5), Box(id = 6), Box(id = 7), Box(id = 8), Box(id = 9), Box(id = 10), Box(id = 11), Box(id = 12), Box(id = 13), Box(id = 14), Box(id = 15), Box(id = 16), Box(id = 17), Box(id = 18)))
         }
         grid.onItemClickListener = object: AdapterView.OnItemClickListener {
           override fun onItemClick(parent: AdapterView<*>, view: View, pos: Int, id: Long) {
             val box = grid.adapter.getItem(pos) as Box
             if (box.locked) {
-              ui.owner.open((pos + 1).toByte())
+              ui.owner.open((box.id).toByte())
             }
           }
         }
@@ -259,7 +260,7 @@ class PortAdapter(val ports: MutableList<SerialPort>) : BaseAdapter() {
   }
 }
 
-data class Box (var locked: Boolean = false, var empty: Boolean = true)
+data class Box (var id: Int, var locked: Boolean = false, var empty: Boolean = true)
 
 class BoxAdapter(val boxes: List<Box>) : BaseAdapter() {
   val items: List<Box> = boxes
@@ -267,16 +268,12 @@ class BoxAdapter(val boxes: List<Box>) : BaseAdapter() {
   override fun getView(i : Int, v : View?, parent : ViewGroup?) : View {
     val item = getItem(i)
     return with(parent!!.context) {
-      relativeLayout {
+      verticalLayout {
         padding = dip(10)
-        imageView(imageResource = if (item.locked) R.drawable.lock_icon else R.drawable.unlock_icon).lparams {
-          centerInParent()
+        textView("${item.id}") {
+          textSize = 28f
         }
-        textView("${i + 1}") {
-          textSize = 18f
-        }.lparams {
-          centerInParent()
-        }
+        imageView(imageResource = if (item.locked) R.drawable.lock_icon else R.drawable.unlock_icon)
       }
     }
   }
@@ -324,10 +321,6 @@ class Worker(val port: SerialPort): Thread() {
   override fun run() {
     val sdk: LockerSDK = LockerSDK(port.getInputStream(), port.getOutputStream())
     while (running && port.isOpen()) {
-      try {
-        Thread.sleep(1000)
-      } finally {
-      }
       var cmd: LockCommand? = queue.poll()
       when (cmd?.type) {
         LockCommandType.QUERY -> cmd.callback(sdk.query(cmd.board))
@@ -345,6 +338,12 @@ class Worker(val port: SerialPort): Thread() {
           }
           if (!found) {
             cmd.callback(Pair<Byte, Boolean>(0.toByte(), false))
+          }
+        }
+        null -> {
+          try {
+            Thread.sleep(500)
+          } finally {
           }
         }
       }

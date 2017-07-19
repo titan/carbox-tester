@@ -12,6 +12,7 @@
     <activity
       android:name=".MainActivity"
       android:label="@string/app_name"
+      android:background="#223689"
       >
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -21,10 +22,12 @@
     <activity
       android:name=".LockActivity"
       android:label="@string/lock_title"
+      android:background="#223689"
       />
     <activity
       android:name=".CardActivity"
       android:label="@string/card_title"
+      android:background="#223689"
       />
 
   </application>
