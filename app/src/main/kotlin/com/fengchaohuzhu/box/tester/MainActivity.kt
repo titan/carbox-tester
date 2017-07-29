@@ -35,6 +35,9 @@ class MainActivityUi : AnkoComponent<MainActivity> {
             MenuItem(title = "IC卡检测", action = {
               startActivity<CardActivity>()
             }),
+            MenuItem(title = "扬声器", action = {
+              startActivity<SpeakerActivity>()
+            }),
             MenuItem(title = "退出", action = {
               System.exit(0)
             })

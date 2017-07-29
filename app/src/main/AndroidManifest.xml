@@ -29,6 +29,11 @@
       android:label="@string/card_title"
       android:background="#223689"
       />
+    <activity
+      android:name=".SpeakerActivity"
+      android:label="@string/speaker_title"
+      android:background="#223689"
+      />
 
   </application>
 
