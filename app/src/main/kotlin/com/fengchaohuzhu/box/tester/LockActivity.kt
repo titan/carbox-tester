@@ -270,6 +270,7 @@ class BoxAdapter(val boxes: List<Box>) : BaseAdapter() {
     return with(parent!!.context) {
       verticalLayout {
         padding = dip(10)
+        background = resources.getDrawable(R.drawable.grid_item_background)
         textView("${item.id}") {
           textSize = 28f
         }
