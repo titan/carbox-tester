@@ -1,4 +1,4 @@
-package com.fengchaohuzhu.box.tester
+package box.tester
 
 import android.app.Activity
 import android.graphics.Color

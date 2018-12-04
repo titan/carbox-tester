@@ -1,4 +1,4 @@
-package com.fengchaohuzhu.box.tester
+package box.tester
 
 import java.io.File
 import java.io.FilenameFilter
